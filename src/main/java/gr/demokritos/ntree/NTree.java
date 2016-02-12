@@ -43,6 +43,11 @@ public class NTree<T> {
 	private static int DEFAULT_BRANCHING = 8;
 
 	/**
+	 * A variable holding the number of leaf nodes in the tree.
+	 */
+	private int size;
+
+	/**
 	 * The tree's root node.
 	 */
 	protected Node<T> root;
@@ -55,6 +60,7 @@ public class NTree<T> {
 	 */
 	public NTree(Node<T> root) {
 		this.root = root;
+		this.size = 1;
 		nodeComp = root.nodeComp;
 		branching = root.branching;
 	}
@@ -68,6 +74,7 @@ public class NTree<T> {
 	 */
 	public NTree(T rootData, NodeComparator<T> ndComp) {
 		this.root = new Node<T>(rootData, ndComp, DEFAULT_BRANCHING);
+		this.size = 1;
 		this.nodeComp = ndComp;
 		this.branching = DEFAULT_BRANCHING;
 	}
@@ -82,6 +89,7 @@ public class NTree<T> {
 	 */
 	public NTree(T rootData, NodeComparator<T> ndComp, int n) {
 		this.root = new Node<T>(rootData, ndComp, n);
+		this.size = 1;
 		this.nodeComp = ndComp;
 		this.branching = n;
 	}
@@ -94,8 +102,23 @@ public class NTree<T> {
 	 */
 	public NTree(NodeComparator<T> ndComp) {
 		this.root = null;
+		this.size = 0;
 		this.nodeComp = ndComp;
 		this.branching = DEFAULT_BRANCHING;
+	}
+	
+	/**
+	 * Builds a new tree that is initially empty, using a specified
+	 * {@link NodeComparator} and a specified branching factor.
+	 *
+	 * @param ndComp a user-specified node comparator
+	 * @param n the branching factor of the tree
+	 */
+	public NTree(NodeComparator<T> ndComp, int n) {
+		this.root = null;
+		this.size = 0;
+		this.nodeComp = ndComp;
+		this.branching = n;
 	}
 
 	/**
@@ -105,6 +128,16 @@ public class NTree<T> {
 	 */
 	public boolean isEmpty() {
 		return (root == null);
+	}
+
+	/**
+	 * Gets the size of the tree, which is assumed to be the number
+	 * of leaf nodes it contains.
+	 *
+	 * @return an integer containing the tree's size
+	 */
+	public int size() {
+		return size;
 	}
 
 	/**
@@ -133,19 +166,25 @@ public class NTree<T> {
 	 * becomes the tree's root. This method returns a boolean value
 	 * that is true if an addition was performed and false in the
 	 * case that a node with the same key already existed in the
-	 * tree.
+	 * tree. If an addition is performed successfully, it also
+	 * updates the tree size.
 	 *
 	 * @param toAdd the new node to add in the tree.
 	 * @return a boolean value indicating whether an addition was
 	 * performed or not.
 	 */
 	protected boolean addNode(Node<T> toAdd) {
+		boolean res = false;
 		if (root == null) {
 			this.root = toAdd;
+			size++;
 			return true;
 		}
 		else {
-			return root.addChild(toAdd);
+			res = root.addChild(toAdd);
+			if (res)
+				size++;
+			return res;
 		}
 	}
 
@@ -158,14 +197,8 @@ public class NTree<T> {
 	 * @return a boolean indicating whether a node was added or not
 	 */
 	public boolean addData(T toAdd) {
-		if (null == root) {
-			Node<T> _toAdd = new Node<T>(toAdd, nodeComp, branching);
-			this.root = _toAdd;
-			return true;
-		}
-		else {
-			return root.addChild(toAdd);
-		}
+		Node<T> _toAdd = new Node<T>(toAdd, nodeComp, branching);
+		return root.addChild(_toAdd);
 	}
 
 	/**
