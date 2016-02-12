@@ -130,32 +130,41 @@ public class NTree<T> {
 
 	/**
 	 * Adds a new node to the tree. If the tree is empty, the node
-	 * becomes the tree's root.
+	 * becomes the tree's root. This method returns a boolean value
+	 * that is true if an addition was performed and false in the
+	 * case that a node with the same key already existed in the
+	 * tree.
 	 *
 	 * @param toAdd the new node to add in the tree.
+	 * @return a boolean value indicating whether an addition was
+	 * performed or not.
 	 */
-	protected void addNode(Node<T> toAdd) {
+	protected boolean addNode(Node<T> toAdd) {
 		if (root == null) {
 			this.root = toAdd;
+			return true;
 		}
 		else {
-			root.addChild(toAdd);
+			return root.addChild(toAdd);
 		}
 	}
 
 	/**
 	 * Adds a new data item to the tree by creating a node and then
 	 * adding the node to it.
+	 * @see Node#addChild(T)
 	 *
 	 * @param toAdd the data item to add in the tree.
+	 * @return a boolean indicating whether a node was added or not
 	 */
-	public void addData(T toAdd) {
+	public boolean addData(T toAdd) {
 		if (null == root) {
 			Node<T> _toAdd = new Node<T>(toAdd, nodeComp, branching);
 			this.root = _toAdd;
+			return true;
 		}
 		else {
-			root.addChild(toAdd);
+			return root.addChild(toAdd);
 		}
 	}
 
@@ -172,7 +181,7 @@ public class NTree<T> {
 			return null;
 		Node<T> toSeek = new Node<T>(query, nodeComp, branching);
 		Node<T> result = root.getMostSimilarChild(toSeek);
-		return result.getData();
+		return result.getKey();
 	}
 
 	/**
@@ -194,11 +203,11 @@ public class NTree<T> {
 		NodeComparator<Integer> nComp = new NodeComparator<Integer>() {
 			@Override
 			public int compare(Node<Integer> objA, Node<Integer> objB) {
-				return (objA.getData() - objB.getData());
+				return (objA.getKey() - objB.getKey());
 			}
 
 			public double getDistance(Node<Integer> objA, Node<Integer> objB) {
-				return Math.abs(objA.getData() - objB.getData());
+				return Math.abs(objA.getKey() - objB.getKey());
 			}
 		};
 

@@ -42,10 +42,10 @@ public class Node<T> {
 	protected NodeType nodeType;
 
 	/**
-	 * The data this node contains. Once this field is set,
+	 * The key this node contains. Once this field is set,
 	 * it can't be modified.
 	 */
-	protected final T data;
+	protected final T key;
 
 	/**
 	 * A list containing the children of this nodes, that are also nodes.
@@ -74,11 +74,11 @@ public class Node<T> {
 	 * empty list of children, using a specified comparator for choosing which
 	 * child node to expand and the default value of N.
 	 *
-	 * @param data the node's data
+	 * @param key the node's data
 	 * @param nodeComp the comparator to be used for nodes
 	 */
-	public Node(T data, NodeComparator<T> nodeComp) {
-		this.data = data;
+	public Node(T key, NodeComparator<T> nodeComp) {
+		this.key = key;
 		this.nodeComp = nodeComp;
 		this.branching = 8;
 		this.children = new ArrayList<Node<T>>(this.branching);
@@ -98,7 +98,7 @@ public class Node<T> {
 	 * @param n the max number of children per node
 	 */
 	public Node(T data, NodeComparator<T> nodeComp, int n) {
-		this.data = data;
+		this.key = data;
 		this.nodeComp = nodeComp;
 		this.children = new ArrayList<Node<T>>(n);
 		this.branching = n;
@@ -134,12 +134,12 @@ public class Node<T> {
 	}
 
 	/**
-	 * Simple getter for the data the node encapsulates.
+	 * Simple getter for node's key.
 	 *
-	 * @return the node's data
+	 * @return the node's key
 	 */
-	public T getData() {
-		return this.data;
+	public T getKey() {
+		return this.key;
 	}
 
 	/**
@@ -159,33 +159,47 @@ public class Node<T> {
 	 * <tt>addChild</tt> is invoked.
 	 *
 	 * @param toAdd the new node to add
+	 * @return a boolean indicating if an addition was performed (true) or if
+	 * the node was already in the tree (false).
 	 */
-	protected void addChild(Node<T> toAdd) {
+	protected boolean addChild(Node<T> toAdd) {
 		/* if this is a leaf node, we probably need to expand
 		 * since we are creating a new child. The current node's
 		 * type is set to INDEX and its own data is copied to a
 		 * new node, which is placed in this node's child list
 		 * along with the node that was queued for addition. */
 		if (isLeaf()) {
+			/* if the node to add is already present, do nothing */
+			if (toAdd.getKey().equals(this.getKey())) 
+				return false;
+
+			/* otherwise, this node becomed INDEX and the
+			 * new node is added to its children */
 			this.nodeType = NodeType.INDEX;
 			children.add(getLeaf());
 			children.add(toAdd); toAdd.setParent(this);
-			return;
+			return true;
 		}
 		/* Otherwise, this is already an index node -- no need to expand! */
 
-
-		/* if child list is not empty, add the new item to it
-		 * and update its parent */
+		/* if child list is not empty and none of the children is equal
+		 * to the node, add it to the child list and update its parent */
 		if (children.size() < branching) {
+			/* check if any of the children has the same key */
+			for (Node<T> nChild: children) {
+				if (nChild.getKey().equals(toAdd.getKey()))
+					return false;
+			}
+
 			children.add(toAdd);
 			toAdd.setParent(this);
+			return true;
 		}
 		/* otherwise, pick the closest node to descend into */
 		else {
 			/* expand the child with the minimum distance */
 			int minIndex = findMinIndex(toAdd);
-			children.get(minIndex).addChild(toAdd);
+			return children.get(minIndex).addChild(toAdd);
 		}
 	}
 
@@ -194,10 +208,12 @@ public class Node<T> {
 	 * @see #addChild(Node<T>)
 	 *
 	 * @param toAdd the data item to add
+	 * @return a boolean indicating if an addition was performed
+	 * or if the item was already present
 	 */
-	public void addChild(T toAdd) {
+	public boolean addChild(T toAdd) {
 		Node<T> nodeToAdd = new Node<T>(toAdd, nodeComp, branching);
-		addChild(nodeToAdd);
+		return addChild(nodeToAdd);
 	}
 
 	/**
@@ -230,7 +246,7 @@ public class Node<T> {
 		Node<T> result = 
 			getMostSimilarChild(new Node<T>(query, nodeComp, branching));
 
-		return result.getData();
+		return result.getKey();
 	}
 
 	/**
@@ -258,7 +274,7 @@ public class Node<T> {
 			getNMostSimilar(new Node<T>(query, nodeComp, branching), N);
 		List<T> res = new ArrayList<T>(resultNodes.size());
 		for (Node<T> nd: resultNodes) {
-			res.add(nd.getData());
+			res.add(nd.getKey());
 		}
 
 		return res;
@@ -335,7 +351,7 @@ public class Node<T> {
 	 */
 	public void traverse(List<T> results) {
 		if (isLeaf()) { 
-			results.add(this.data);
+			results.add(this.key);
 		}
 		else {
 			// add results from all children
@@ -357,7 +373,7 @@ public class Node<T> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.data);
+		return Objects.hash(this.key);
 	}
 
 	@Override
@@ -368,7 +384,7 @@ public class Node<T> {
 			return false;
 		/* compare the enclosed data */
 		Node<?> otherNode = (Node<?>) other;
-		if (otherNode.getData().equals(this.getData())) {
+		if (otherNode.getKey().equals(this.getKey())) {
 			return true;
 		}
 		return false;
@@ -384,7 +400,7 @@ public class Node<T> {
 	 * @return a leaf node with the same data and parameters
 	 */
 	public Node<T> getLeaf() {
-		Node<T> leaf = new Node<T>(this.data, this.nodeComp, this.branching);
+		Node<T> leaf = new Node<T>(this.key, this.nodeComp, this.branching);
 		leaf.setParent(this);
 		return leaf;
 	}
