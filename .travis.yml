@@ -1,0 +1,4 @@
+# project in Java
+language: java
+
+script: mvn clean verify

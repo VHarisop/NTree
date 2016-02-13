@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/VHarisop/NTree.svg?branch=master)](https://travis-ci.org/VHarisop/NTree)
+
 # NTree
 A generic custom N-ary tree in Java.
 
