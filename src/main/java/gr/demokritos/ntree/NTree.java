@@ -198,7 +198,7 @@ public class NTree<T> {
 	 */
 	public boolean addData(T toAdd) {
 		Node<T> _toAdd = new Node<T>(toAdd, nodeComp, branching);
-		return root.addChild(_toAdd);
+		return addNode(_toAdd);
 	}
 
 	/**
