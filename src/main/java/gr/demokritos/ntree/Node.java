@@ -255,10 +255,33 @@ public class Node<T> {
 	 *
 	 * @param query the query node
 	 * @param N the number of results to return
-	 * @return a list containing the N most similar nodes to the query
+	 * @param soFar the list of results so far
+	 * @return a list containing the min(#descendants, N) most similar
+	 * nodes to the query
 	 */
-	protected List<Node<T>> getNMostSimilar(Node<T> query, int N) {
-		throw new UnsupportedOperationException("Unimplemented feature!");
+	protected void getNMostSimilar(Node<T> query, int N, List<Node<T>> soFar) {
+		if (isLeaf()) {
+			soFar.add(this);
+		}
+		else {
+			do {
+				if (soFar.size() == N) {
+					return;
+				}
+				int nextC =
+					findNextCandidate(query, new HashSet<Node<T>>(soFar));
+				/* no candidate found, this node is explored!
+				 * Control is passed to the caller (parent node) */
+				if (nextC == -1) {
+					return;
+				}
+				else {
+					/* explore most similar child */
+					children.get(nextC).getNMostSimilar(query, N, soFar);
+				}
+			} while ((soFar.size() < N) || soFar.size() >= children.size());
+		}
+		return;
 	}
 
 	/**
@@ -269,16 +292,56 @@ public class Node<T> {
 	 * @param N the number of similar results to return
 	 * @return a list containing the N most similar items to the query
 	 */
-	public List<T> getNMostSimilar(T query, int N) {
-		List<Node<T>> resultNodes = 
-			getNMostSimilar(new Node<T>(query, nodeComp, branching), N);
+	public List<T> getNMostSimilar(Node<T> query, int N) {
+		List<Node<T>> resultNodes = new ArrayList<Node<T>>(N);
+		getNMostSimilar(query, N, resultNodes);
 		List<T> res = new ArrayList<T>(resultNodes.size());
 		for (Node<T> nd: resultNodes) {
 			res.add(nd.getKey());
 		}
-
 		return res;
+	}
 
+	/**
+	 * Utility function that, given a reference node, looks for the child
+	 * with the smallest distance from the reference node to pick nearest
+	 * neighbours from, excluding children from a list of visited nodes.
+	 *
+	 * @param ref the reference node
+	 * @param visited the list of already visited children
+	 * @return the index of the most similar child
+	 */
+	private int findNextCandidate(Node<T> ref, Set<Node<T>> visited) {
+		boolean unset = true; // indicates if min is set
+		double minDist = 0.0;
+		int minIndex = 0;
+		for (int i = 0; i < children.size(); ++i) {
+			/* if child has been visited, try next one */
+			if (visited.contains(children.get(i)))
+				continue;
+
+			/* get distance between nodes */
+			double tempDist = nodeComp.getDistance(ref, children.get(i));
+
+			/* if minimum has not been set yet, initialize and skip check */
+			if (unset) {
+				minDist = tempDist;
+				minIndex = i;
+				unset = false;
+				continue;
+			}
+
+			/* compare distances and update min accordingly */
+			if (tempDist < minDist) {
+				minDist = tempDist;
+				minIndex = i;
+			}
+		}
+		/* if all children were visited, return an indicative value */
+		if (unset)
+			return -1;
+		else
+			return minIndex;
 	}
 
 	/**

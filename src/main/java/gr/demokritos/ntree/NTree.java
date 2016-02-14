@@ -218,6 +218,23 @@ public class NTree<T> {
 	}
 
 	/**
+	 * Looks for the K most similar items to a query item in the
+	 * tree and returns them in a list.
+	 *
+	 * @param query the query item
+	 * @param K the number of desired neighbours
+	 * @return a list containing min(size, K) data items
+	 */
+	public List<T> getKNearestNeighbours(T query, int K) {
+		if (isEmpty())
+			return null;
+		K = (K > size) ? size : K;
+		return root.getNMostSimilar(
+				new Node<T>(query, nodeComp, branching),
+				K);
+	}
+
+	/**
 	 * Traverses the tree in arbitrary order.
 	 *
 	 * @return a list containing the tree's items
@@ -250,6 +267,10 @@ public class NTree<T> {
 		nTree.addData(2); nTree.addData(5);
 		nTree.addData(9); nTree.addData(6); 
 		nTree.addData(15); nTree.addData(10);
+
+		for (int i: nTree.getKNearestNeighbours(9, 2)) {
+			System.out.println(i);
+		}
 
 		System.out.println(nTree.containsItem(5));
 		System.out.println(nTree.containsItem(12));
